@@ -13,9 +13,10 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.testng.IHookCallBack;
+import org.testng.IHookable;
+import org.testng.IHookCallBack;
+import org.testng.ITestResult;
 
 import java.io.*;
 import java.net.URL;
@@ -25,10 +26,10 @@ import java.util.logging.Logger;
 
 /**
  * This is the main interface to the Betamax proxy. It allows control of Betamax configuration and inserting and
- * ejecting `Tape` instances. The class can also be used as a _JUnit @Rule_ allowing tests annotated with `@Betamax` to
+ * ejecting `Tape` instances. The class can also be used as a _TestNGRule_ allowing tests annotated with `@Betamax` to
  * run with the Betamax HTTP proxy in the background.
  */
-public class Recorder implements TestRule {
+public class Recorder implements IHookable {
     public Recorder() {
         try {
             URL propertiesFile = Recorder.class.getResource("/betamax.properties");
@@ -85,7 +86,7 @@ public class Recorder implements TestRule {
     /**
      * Inserts a tape either creating a new one or loading an existing file from `tapeRoot`.
      *
-     * @param name      the name of the _tape_.
+     * @param name the name of the _tape_.
      */
     public void insertTape(String name) {
         insertTape(name, new LinkedHashMap<Object, Object>());
@@ -112,33 +113,6 @@ public class Recorder implements TestRule {
 
     }
 
-    @Override
-    public Statement apply(final Statement statement, Description description) {
-        final Betamax annotation = description.getAnnotation(Betamax.class);
-        if (annotation != null) {
-            log.fine("found @Betamax annotation on '" + description.getDisplayName() + "'");
-            return new Statement() {
-                @Override
-                public void evaluate() throws Throwable {
-                    LinkedHashMap<String, Serializable> map = new LinkedHashMap<String, Serializable>(2);
-                    map.put("mode", annotation.mode());
-                    map.put("match", new ArrayList<Comparator<Request>>(Arrays.asList(annotation.match())));
-                    try {
-                        start(annotation.tape(), map);
-                        statement.evaluate();
-                    } catch (Exception e) {
-                        log.log(SEVERE, "Caught exception starting Betamax", e);
-                    } finally {
-                        stop();
-                    }
-                }
-            };
-        } else {
-            log.fine("no @Betamax annotation on '" + description.getDisplayName() + "'");
-            return statement;
-        }
-
-    }
 
     public static boolean getBoolean(Properties properties, String key, boolean defaultValue) {
         String value = properties.getProperty(key);
@@ -160,7 +134,7 @@ public class Recorder implements TestRule {
 
     public static <T extends Enum<T>> T getEnum(Properties properties, String key, T defaultValue) {
         String value = properties.getProperty(key);
-        T anEnum = Enum.valueOf((Class<T>)defaultValue.getClass(), value);
+        T anEnum = Enum.valueOf((Class<T>) defaultValue.getClass(), value);
         return value != null ? anEnum : defaultValue;
     }
 
@@ -244,4 +218,27 @@ public class Recorder implements TestRule {
      */
     private boolean ignoreLocalhost = false;
     private StorableTape tape;
+
+    public void run(final IHookCallBack iHookCallBack, ITestResult iTestResult) {
+
+        //final co.freeside.betamax.Betamax annotation = description.getAnnotation(co.freeside.betamax.Betamax.class);
+        final co.freeside.betamax.Betamax annotation = iTestResult.getMethod().getMethod().getAnnotation(co.freeside.betamax.Betamax.class);
+        if (annotation != null) {
+            log.fine("found @Betamax annotation on '" + iTestResult.getTestName() + "'");
+            LinkedHashMap<String, Serializable> map = new LinkedHashMap<String, Serializable>(2);
+            map.put("mode", annotation.mode());
+            map.put("match", new ArrayList<Comparator<Request>>(Arrays.asList(annotation.match())));
+            try {
+                start(annotation.tape(), map);
+                iHookCallBack.runTestMethod(iTestResult);
+            } catch (Exception e) {
+                log.log(SEVERE, "Caught exception starting Betamax", e);
+            } finally {
+                stop();
+            }
+        } else {
+            log.fine("no @Betamax annotation on '" + iTestResult.getTestName());
+        }
+
+    }
 }

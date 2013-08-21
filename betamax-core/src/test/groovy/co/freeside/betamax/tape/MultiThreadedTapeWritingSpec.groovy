@@ -6,7 +6,7 @@ import co.freeside.betamax.handler.*
 import co.freeside.betamax.proxy.jetty.SimpleServer
 import co.freeside.betamax.util.message.BasicRequest
 import co.freeside.betamax.util.server.HelloHandler
-import org.junit.Rule
+import com.tngtech.testng.rules.annotations.TestNGRule;
 import spock.lang.*
 import static co.freeside.betamax.util.FileUtils.newTempDir
 import static co.freeside.betamax.util.server.HelloHandler.HELLO_WORLD
@@ -15,7 +15,7 @@ import static java.util.concurrent.TimeUnit.SECONDS
 class MultiThreadedTapeWritingSpec extends Specification {
 
 	@Shared @AutoCleanup('deleteDir') File tapeRoot = newTempDir('tapes')
-	@Rule Recorder recorder = new Recorder(tapeRoot: tapeRoot)
+	@TestNGRule Recorder recorder = new Recorder(tapeRoot: tapeRoot)
 	HttpHandler handler = new DefaultHandlerChain(recorder)
 
 	@Shared @AutoCleanup('stop') SimpleServer endpoint = new SimpleServer()

@@ -5,7 +5,7 @@ import co.freeside.betamax.handler.*
 import co.freeside.betamax.proxy.jetty.SimpleServer
 import co.freeside.betamax.util.message.BasicRequest
 import co.freeside.betamax.util.server.IncrementingHandler
-import org.junit.Rule
+import com.tngtech.testng.rules.annotations.TestNGRule;
 import spock.lang.*
 import static co.freeside.betamax.Headers.X_BETAMAX
 import static co.freeside.betamax.TapeMode.WRITE_SEQUENTIAL
@@ -17,7 +17,7 @@ import static org.apache.http.HttpStatus.SC_OK
 class SequentialTapeWritingSpec extends Specification {
 
 	@Shared @AutoCleanup('deleteDir') File tapeRoot = newTempDir('tapes')
-	@Rule Recorder recorder = new Recorder(tapeRoot: tapeRoot)
+	@TestNGRule Recorder recorder = new Recorder(tapeRoot: tapeRoot)
 	@Shared @AutoCleanup('stop') SimpleServer endpoint = new SimpleServer()
 	HttpHandler handler = new DefaultHandlerChain(recorder)
 
