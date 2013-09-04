@@ -221,6 +221,8 @@ public class Recorder implements IHookable {
 
     public void run(final IHookCallBack iHookCallBack, ITestResult iTestResult) {
 
+        System.out.println("JL DEBUG: Recorder RUN called!");
+
         //final co.freeside.betamax.Betamax annotation = description.getAnnotation(co.freeside.betamax.Betamax.class);
         final co.freeside.betamax.Betamax annotation = iTestResult.getMethod().getMethod().getAnnotation(co.freeside.betamax.Betamax.class);
         if (annotation != null) {

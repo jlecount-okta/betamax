@@ -5,15 +5,21 @@ import co.freeside.betamax.handler.*
 import co.freeside.betamax.proxy.jetty.SimpleServer
 import co.freeside.betamax.util.message.BasicRequest
 import co.freeside.betamax.util.server.IncrementingHandler
-import com.tngtech.testng.rules.annotations.TestNGRule;
+
+
 import spock.lang.*
 import static co.freeside.betamax.Headers.X_BETAMAX
 import static co.freeside.betamax.TapeMode.WRITE_SEQUENTIAL
 import static co.freeside.betamax.util.FileUtils.newTempDir
 import static org.apache.http.HttpStatus.SC_OK
 
+import org.testng.annotations.Listeners
+import com.tngtech.testng.rules.annotations.TestNGRule
+import com.tngtech.testng.rules.RulesListener
+
 @Issue('https://github.com/robfletcher/betamax/issues/7')
 @Issue('https://github.com/robfletcher/betamax/pull/70')
+@Listeners(RulesListener.class)
 class SequentialTapeWritingSpec extends Specification {
 
 	@Shared @AutoCleanup('deleteDir') File tapeRoot = newTempDir('tapes')

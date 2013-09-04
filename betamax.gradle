@@ -11,6 +11,7 @@ buildscript {
 
 dependencies {
     compile fileTree(dir: 'lib', includes: ['testng-rules-1.0-SNAPSHOT.jar'])
+    
 }
 
 apply from: "gradle/idea/idea.gradle"
@@ -19,6 +20,9 @@ allprojects {
 	version = "2.0-SNAPSHOT"
 	group = "co.freeside"
 
+    repositories {
+        maven { url  'http://artifacts.aue1d.saasure.com:8081/artifactory/thirdparty' }
+    }
 
 	ext {
 		commonDependencies = [

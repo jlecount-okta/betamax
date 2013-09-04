@@ -9,7 +9,9 @@ dependencies {
 	compile commonDependencies.groovy
 	compile commonDependencies.guava
 	compile commonDependencies.testng
+	compile commonDependencies.testngrules
 	testCompile commonDependencies.spock
+	//testCompile commonDependencies.testng
 }
 
 test {
@@ -19,4 +21,22 @@ test {
 			exceptionFormat "short"
 		}
 	}
+    useTestNG() {
+        suiteXmlBuilder().suite(name: 'gradle-testng-mockito-bootstrap', parallel: 'tests') {
+            test (name : 'all-tests') {
+                packages {
+                    'package' (name: 'co.freeside.betamax.tape.testng')
+                }
+            }
+        }
+    }
+    options {
+        listeners << 'org.uncommons.reportng.HTMLReporter'
+        listeners << 'org.uncommons.reportng.JUnitXMLReporter'
+    }
+    ext.useDefaultListeners = true
+    ext.workingDirectory = 'build/'
 }
+
+
+

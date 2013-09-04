@@ -6,13 +6,18 @@ import co.freeside.betamax.handler.*
 import co.freeside.betamax.proxy.jetty.SimpleServer
 import co.freeside.betamax.util.message.BasicRequest
 import co.freeside.betamax.util.server.HelloHandler
-import com.tngtech.testng.rules.annotations.TestNGRule;
+
+import com.tngtech.testng.rules.annotations.TestNGRule
+import com.tngtech.testng.rules.RulesListener
+import org.testng.annotations.*;
+
 import spock.lang.*
 import static co.freeside.betamax.util.FileUtils.newTempDir
 import static co.freeside.betamax.util.server.HelloHandler.HELLO_WORLD
 import static java.util.concurrent.TimeUnit.SECONDS
 
-class MultiThreadedTapeWritingSpec extends Specification {
+@Listeners(RulesListener.class)
+class MultiThreadedTapeWritingSpec {
 
 	@Shared @AutoCleanup('deleteDir') File tapeRoot = newTempDir('tapes')
 	@TestNGRule Recorder recorder = new Recorder(tapeRoot: tapeRoot)
@@ -20,16 +25,18 @@ class MultiThreadedTapeWritingSpec extends Specification {
 
 	@Shared @AutoCleanup('stop') SimpleServer endpoint = new SimpleServer()
 
+    @BeforeClass
 	void setupSpec() {
+	    println "JL DEBUG: RUNNING!"
 		endpoint.start(HelloHandler)
 	}
 
+    @Test
 	@Betamax(tape = 'multi_threaded_tape_writing_spec', mode = TapeMode.READ_WRITE)
-	void 'the tape can cope with concurrent reading and writing'() {
-		when: 'requests are fired concurrently'
+	void testThatTapeCopesWithConcurrentReadingAndWriting() {
 		def finished = new CountDownLatch(threads)
 		def responses = [:]
-		threads.times { i ->
+		10.times { i ->
 			Thread.start {
 				try {
 					def request = new BasicRequest('GET', "$endpoint.url$i")
@@ -41,15 +48,11 @@ class MultiThreadedTapeWritingSpec extends Specification {
 			}
 		}
 
-		then: 'all threads complete'
 		finished.await(1, SECONDS)
 
-		and: 'the correct response is returned to each request'
-		responses.every {
-			it.value == HELLO_WORLD
+		responses.each {
+			assertTrue(it.value == HELLO_WORLD)
 		}
 
-		where:
-		threads = 10
 	}
 }

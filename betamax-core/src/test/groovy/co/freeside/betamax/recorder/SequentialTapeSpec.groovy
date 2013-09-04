@@ -4,7 +4,11 @@ import co.freeside.betamax.*
 import co.freeside.betamax.handler.*
 import co.freeside.betamax.util.message.BasicRequest
 import groovy.json.JsonSlurper
-import com.tngtech.testng.rules.annotations.TestNGRule;
+
+import com.tngtech.testng.rules.annotations.TestNGRule
+import com.tngtech.testng.rules.RulesListener
+import org.testng.annotations.Listeners
+
 import spock.lang.*
 import static co.freeside.betamax.TapeMode.READ_SEQUENTIAL
 import static org.apache.http.HttpHeaders.CONTENT_TYPE
@@ -13,6 +17,8 @@ import static org.apache.http.entity.ContentType.APPLICATION_JSON
 
 @Issue('https://github.com/robfletcher/betamax/issues/7')
 @Issue('https://github.com/robfletcher/betamax/pull/70')
+
+@Listeners(RulesListener.class)
 class SequentialTapeSpec extends Specification {
 
 	@TestNGRule Recorder recorder = new Recorder()
