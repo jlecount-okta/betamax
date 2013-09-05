@@ -1,25 +1,28 @@
 package co.freeside.betamax.encoding
 
 import org.testng.annotations.*
-import
-@Unroll
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo
+import static org.hamcrest.Matchers.is
+
 class EncoderTest {
 
-    @BeforeMethod
-    public void setup() {
-		def bytes = encoder.encode(text)
+    @DataProvider(name="provider")
+    Object[] getData() {
+        [
+            ['this is some text that gets encoded', GzipEncoder.newInstance()],
+            ['this is some text that gets encoded', DeflateEncoder.newInstance()]
+        ]
     }
 
-    @Test(description="#encoderClass can decode what it has encoded")
-    void encoderClassCanDecode() {
+
+    @Test(dataProvider="provider", description="#encoderClass can decode what it has encoded")
+    void encoderClassCanDecode(text, encoder) {
+		def bytes = encoder.encode(text)
 
 		assertThat(new String(bytes) != text, is(true))
 		assertThat(encoder.decode(new ByteArrayInputStream(bytes)), equalTo(text))
 
-		where:
-		encoderClass << [GzipEncoder, DeflateEncoder]
-		text = 'this is some text that gets encoded'
-		encoder = encoderClass.newInstance()
 	}
 
 }

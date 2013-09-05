@@ -10,8 +10,12 @@ dependencies {
 	compile commonDependencies.guava
 	compile commonDependencies.testng
 	compile commonDependencies.testngrules
-	testCompile commonDependencies.spock
-	//testCompile commonDependencies.testng
+	testCompile commonDependencies.testng
+	testCompile commonDependencies.hamcrest
+	testCompile commonDependencies.easymock
+	testCompile commonDependencies.reportng
+	testCompile commonDependencies.velocity
+	testCompile commonDependencies.guice
 }
 
 test {
@@ -25,7 +29,7 @@ test {
         suiteXmlBuilder().suite(name: 'gradle-testng-mockito-bootstrap', parallel: 'tests') {
             test (name : 'all-tests') {
                 packages {
-                    'package' (name: 'co.freeside.betamax.tape.testng')
+                    'package' (name: 'co.freeside.*')
                 }
             }
         }
