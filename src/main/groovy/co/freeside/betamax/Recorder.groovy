@@ -16,13 +16,14 @@
 
 package co.freeside.betamax
 
+import co.freeside.betamax.message.Request
+
+import java.lang.reflect.Method;
 import java.util.logging.Logger
 import co.freeside.betamax.proxy.jetty.ProxyServer
 import co.freeside.betamax.tape.*
 import co.freeside.betamax.tape.yaml.YamlTapeLoader
 import co.freeside.betamax.util.PropertiesCategory
-import org.junit.rules.MethodRule
-import org.junit.runners.model.*
 import static TapeMode.READ_WRITE
 import static co.freeside.betamax.MatchRule.*
 import static java.util.Collections.EMPTY_MAP
@@ -31,8 +32,23 @@ import static java.util.Collections.EMPTY_MAP
  * This is the main interface to the Betamax proxy. It allows control of Betamax configuration and inserting and
  * ejecting `Tape` instances. The class can also be used as a _JUnit @Rule_ allowing tests annotated with `@Betamax` to
  * run with the Betamax HTTP proxy in the background.
+ *
+ *
+ * This cannot be implemented as a TestNGRule due to the lack of association in TestNG between setup methods and
+ * the tests that follow them.  The rule must be started at setup time, before any BeforeMethod methods complete.
+ * However, before those methods, the information about what test method is being set up is not available.  Therefore,
+ * one cannot inspect that method to see if it has a Betamax annotation on it...Grr.
+ *
+ * The workaround for this is as follows:
+ * Create a @BeforeMethod like
+ * public void setup(java.lang.reflect.Method m) {
+ *   recorder.startRecorderForTestMethod(m);
+ *   ... rest of setup...
+ * }
+ *
+ * Ideally, this would be in a base class along with the Recorder member field.
  */
-class Recorder implements MethodRule {
+class Recorder {
 
 	public static final String DEFAULT_TAPE_ROOT = 'src/test/resources/betamax/tapes'
 	public static final int DEFAULT_PROXY_PORT = 5555
@@ -167,23 +183,30 @@ class Recorder implements MethodRule {
 		}
 	}
 
-	@Override
-	Statement apply(Statement statement, FrameworkMethod method, Object target) {
-		def annotation = method.getAnnotation(Betamax)
-		if (annotation) {
-			log.fine "found @Betamax annotation on '$method.name'"
-			new Statement() {
-				void evaluate() {
-					withTape(annotation.tape(), [mode: annotation.mode(), match: annotation.match()]) {
-						statement.evaluate()
-					}
-				}
-			}
-		} else {
-			log.fine "no @Betamax annotation on '$method.name'"
-			statement
-		}
-	}
+    public void startRecorderForTestMethod(Method method) {
+        final co.freeside.betamax.Betamax annotation = method.getAnnotation(co.freeside.betamax.Betamax.class);
+        if (annotation != null) {
+            log.fine("found @Betamax annotation on '" + method.getName() + "'");
+            LinkedHashMap<String, Serializable> map = new LinkedHashMap<String, Serializable>(2);
+            map.put("mode", annotation.mode());
+            map.put("match", new ArrayList<Comparator<Request>>(Arrays.asList(annotation.match())));
+            try {
+                startProxy(annotation.tape(), map);
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.log(SEVERE, "Caught exception starting Betamax", e);
+            }
+        } else {
+            log.fine("no @Betamax annotation on '" + testResult.getTestName());
+        }
+    }
+
+    public void stopRecorderForTestMethod(Method method) {
+        final co.freeside.betamax.Betamax annotation = method.getAnnotation(co.freeside.betamax.Betamax.class);
+        if (annotation != null) {
+            stopProxy();
+        }
+    }
 
 	/**
 	 * @return the hostname or address where the proxy will run.

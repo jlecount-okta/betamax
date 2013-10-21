@@ -13,7 +13,7 @@ buildscript {
 	}
 }
 
-version = '1.2-SNAPSHOT'
+version = '1.3-testng'
 group = 'co.freeside'
 archivesBaseName = 'betamax'
 
@@ -27,6 +27,7 @@ dependencies {
 	compile 'junit:junit:4.8.2',
 			'org.yaml:snakeyaml:1.10',
 			'org.apache.httpcomponents:httpclient:4.2.1',
+			'org.testng:testng:6.8.5',
 			'commons-lang:commons-lang:2.4',
 			'org.eclipse.jetty:jetty-server:7.3.1.v20110307'
 
